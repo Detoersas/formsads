@@ -1,6 +1,25 @@
+
 {
   "rules": {
-    ".read": true,
-    ".write": true
+    "sessions": {
+      "$sessionId": {
+        ".read": true,
+        ".write": true,
+        "messages": {
+          "$messageId": {
+            ".validate": "newData.hasChildren(['author','text','ts'])"
+          }
+        },
+        "typing": {
+          ".read": true,
+          ".write": true
+        }
+      }
+    },
+    "presence": {
+      ".read": true,
+      ".write": true
+    }
   }
 }
+

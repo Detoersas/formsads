@@ -31,11 +31,33 @@ npm run dev
 
 Deploy to Vercel
 
-1. Create Firebase project and a Realtime Database (set rules as needed for testing).
-1. Create Firebase project and a Realtime Database (set rules as needed for testing). For quick testing you can use `firebase.rules.json` included at the repo root — replace with secure rules before production.
-2. Copy `.env.local.example` to `.env.local` and fill the values, or add the same variables in Vercel.
-3. Add this project to Vercel and set the environment variables there.
-4. Push this repository to GitHub and import to Vercel.
+1. Create a Firebase project at https://console.firebase.google.com and enable a Realtime Database.
+2. In the Realtime Database rules editor you can paste the provided `firebase.rules.json` for testing. Important: these rules are permissive for demo purposes — secure them before production (use Firebase Authentication and rule checks).
+3. Install the Firebase CLI (optional, for deploying rules):
+
+```bash
+npm install -g firebase-tools
+firebase login
+firebase use --add your-project-id
+```
+
+4. Deploy database rules (optional):
+
+```bash
+firebase deploy --only database
+```
+
+5. Add the Firebase config values shown in Project Settings → Your apps to Vercel environment variables or locally in `.env.local` (copy `.env.local.example`). Set the following names exactly:
+
+- `NEXT_PUBLIC_FIREBASE_API_KEY`
+- `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+- `NEXT_PUBLIC_FIREBASE_DATABASE_URL`
+- `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+- `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET`
+- `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID`
+- `NEXT_PUBLIC_FIREBASE_APP_ID`
+
+6. Push the repo to GitHub and import into Vercel. In Vercel project settings add the same environment variables (set them for Production and Preview as needed).
 
 Notes & limitations
 - This demo uses simple client-side role checks (username+pass); for production, replace with secure auth and server-side rules.
