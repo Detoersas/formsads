@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import { useState, useEffect } from 'react'
-import { db, ref, onValue, update } from '../lib/firebase'
+import { db, ref, onValue } from '../lib/firebase'
 
 export default function Login() {
   const [username, setUsername] = useState('')
@@ -17,7 +17,7 @@ export default function Login() {
     return unsub
   }, [])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
     if (!username.trim()) {
       setError('Username required')
@@ -34,14 +34,9 @@ export default function Login() {
       return
     }
 
-    // Regular user - create session
+    // Regular user - create session ID and navigate
+    // Session will be created in chat page when it loads
     const sessionId = Math.random().toString(36).substr(2, 9)
-    try {
-      const sessionRef = ref(db, `chats/${sessionId}`)
-      await update(sessionRef, { user: username, createdAt: Date.now() })
-    } catch (err) {
-      console.error('Failed to create session:', err)
-    }
     router.push(`/chat?session=${sessionId}&user=${encodeURIComponent(username)}`)
   }
 

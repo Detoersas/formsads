@@ -14,6 +14,21 @@ export default function ChatPage() {
   useEffect(() => {
     if (!session || !user) return
 
+    // Initialize the session if it doesn't exist
+    const initSession = async () => {
+      const sessionRef = ref(db, `chats/${session}`)
+      try {
+        await set(sessionRef, { user: user, createdAt: Date.now() })
+      } catch (err) {
+        console.error('Failed to initialize session:', err)
+      }
+    }
+    initSession()
+  }, [session, user])
+
+  useEffect(() => {
+    if (!session || !user) return
+
     // Subscribe to messages
     const messagesRef = ref(db, `chats/${session}/messages`)
     const unsubMessages = onValue(messagesRef, (snap) => {
