@@ -1,0 +1,1 @@
+{"c":["pages/host","pages/chat","webpack"],"r":["pages/index"],"m":["./node_modules/next/dist/build/webpack/loaders/next-client-pages-loader.js?absolutePagePath=%2Fworkspaces%2Fformsads%2Fpages%2Findex.js&page=%2F!","./pages/index.js","./node_modules/@firebase/database/dist/index.esm2017.js","./node_modules/firebase/database/dist/esm/index.esm.js"]}

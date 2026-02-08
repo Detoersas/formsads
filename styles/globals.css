@@ -1,0 +1,7 @@
+html,body,#__next{height:100%;margin:0;font-family:Inter,ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial}
+*{box-sizing:border-box}
+
+/* simple theme matching a common live support look */
+body{background:linear-gradient(180deg,#f7fbff,#eef6ff)}
+
+.loader{display:flex;align-items:center;justify-content:center;height:100vh}
