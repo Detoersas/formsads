@@ -1,7 +1,7 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState } from 'react'
 import ChatWindow from '../components/ChatWindow'
-import { db, ref, onValue } from '../lib/firebase'
+import { db, ref, onValue, set, onDisconnect } from '../lib/firebase'
 
 export default function Host(){
   const router = useRouter()
@@ -12,6 +12,19 @@ export default function Host(){
   useEffect(()=>{
     // simple client-side guard
     if (user !== 'dex') router.replace('/')
+    // set presence=true for host and arrange to clear on unload
+    const presenceRef = ref(db, 'presence/dex')
+    set(presenceRef, true).catch(()=>{})
+    try {
+      const od = onDisconnect(presenceRef)
+      if (od && typeof od.set === 'function') od.set(false)
+    } catch (e) {}
+    const onUnload = () => { set(presenceRef, false).catch(()=>{}) }
+    window.addEventListener('beforeunload', onUnload)
+    return () => {
+      set(presenceRef, false).catch(()=>{})
+      window.removeEventListener('beforeunload', onUnload)
+    }
   },[user])
 
   useEffect(()=>{
