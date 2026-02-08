@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState, useRef } from 'react'
-import { db, ref, onValue, update, push } from '../lib/firebase'
+import { db, ref, onValue, set, update, push } from '../lib/firebase'
 
 export default function HostPage() {
   const router = useRouter()
@@ -15,10 +15,10 @@ export default function HostPage() {
   // Set host presence
   useEffect(() => {
     const presenceRef = ref(db, 'presence/host')
-    update(presenceRef, true)
+    set(presenceRef, true)
     
     return () => {
-      update(presenceRef, false)
+      set(presenceRef, false)
     }
   }, [])
 
@@ -82,7 +82,7 @@ export default function HostPage() {
     await push(messagesRef, { author: 'dex', text: msg })
     
     const typingRef = ref(db, `chats/${activeSid}/typing/dex`)
-    await update(typingRef, false)
+    await set(typingRef, false)
   }
 
   const handleTyping = (val) => {
@@ -90,11 +90,11 @@ export default function HostPage() {
     if (!activeSid) return
     
     const typingRef = ref(db, `chats/${activeSid}/typing/dex`)
-    update(typingRef, true)
+    set(typingRef, true)
     
     clearTimeout(typingTimeoutRef.current)
     typingTimeoutRef.current = setTimeout(() => {
-      update(typingRef, false)
+      set(typingRef, false)
     }, 2000)
   }
 

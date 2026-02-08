@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router'
 import { useEffect, useState, useRef } from 'react'
-import { db, ref, onValue, push, update } from '../lib/firebase'
+import { db, ref, onValue, push, set, update } from '../lib/firebase'
 
 export default function ChatPage() {
   const router = useRouter()
@@ -50,7 +50,7 @@ export default function ChatPage() {
     
     // Clear typing
     const typingRef = ref(db, `chats/${session}/typing/${user}`)
-    await update(typingRef, false)
+    await set(typingRef, false)
   }
 
   const handleTyping = (val) => {
@@ -58,11 +58,11 @@ export default function ChatPage() {
     if (!session || !user) return
     
     const typingRef = ref(db, `chats/${session}/typing/${user}`)
-    update(typingRef, true)
+    set(typingRef, true)
     
     clearTimeout(typingTimeoutRef.current)
     typingTimeoutRef.current = setTimeout(() => {
-      update(typingRef, false)
+      set(typingRef, false)
     }, 2000)
   }
 
