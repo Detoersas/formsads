@@ -1,73 +1,146 @@
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
-import { db, ref, onValue } from '../lib/firebase'
+import { useState, useEffect } from 'react'
+import { db, ref, onValue, update } from '../lib/firebase'
 
 export default function Login() {
   const [username, setUsername] = useState('')
-  const [pass, setPass] = useState('')
+  const [passcode, setPasscode] = useState('')
   const [error, setError] = useState('')
   const [hostActive, setHostActive] = useState(false)
   const router = useRouter()
 
   useEffect(() => {
-    // subscribe to host presence
-    const pRef = ref(db, 'presence/dex')
-    const unsub = onValue(pRef, (snap) => {
-      const v = snap.val()
-      setHostActive(!!v)
+    const presenceRef = ref(db, 'presence/host')
+    const unsub = onValue(presenceRef, (snap) => {
+      setHostActive(!!snap.val())
     })
-    return () => { if (unsub) unsub() }
+    return unsub
   }, [])
 
-  function submit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    if (!/^[0-9]{4}$/.test(pass)) {
-      setError('Passcode must be 4 numeric digits')
+    if (!username.trim()) {
+      setError('Username required')
       return
     }
-    const isHost = username === 'dex' && pass === '1982'
-    if (isHost) return router.push('/host?user=dex')
-    const sessionId = Math.random().toString(36).slice(2, 9)
+    if (!/^\d{4}$/.test(passcode)) {
+      setError('Passcode must be 4 digits')
+      return
+    }
+
+    // Check if this is the host
+    if (username === 'dex' && passcode === '1982') {
+      router.push('/host')
+      return
+    }
+
+    // Regular user - create session
+    const sessionId = Math.random().toString(36).substr(2, 9)
+    try {
+      const sessionRef = ref(db, `chats/${sessionId}`)
+      await update(sessionRef, { user: username, createdAt: Date.now() })
+    } catch (err) {
+      console.error('Failed to create session:', err)
+    }
     router.push(`/chat?session=${sessionId}&user=${encodeURIComponent(username)}`)
   }
 
-  // no contact button: show status text only
-
   return (
-    <div className="page">
-      <main className="card">
-        <h1>Live Support</h1>
-
-        <div className="hostStatus">
-          {hostActive ? (
-            <div className="active">🟢 Host is active — contact them now.</div>
-          ) : (
-            <div className="inactive">🔴 Host not active — contact them now.</div>
-          )}
+    <div className="container">
+      <div className="card">
+        <h1>Live Support Chat</h1>
+        <div className={`status ${hostActive ? 'active' : 'inactive'}`}>
+          {hostActive ? '🟢 Host is online' : '🔴 Host is offline'}
         </div>
-
-        <form onSubmit={submit} className="form">
-          <label>Username</label>
-          <input value={username} onChange={(e)=>setUsername(e.target.value)} required />
-          <label>4-digit passcode</label>
-          <input value={pass} onChange={(e)=>setPass(e.target.value)} required inputMode="numeric" />
-          {error && <div className="error">{error}</div>}
-          <button type="submit">Continue</button>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <input
+            type="text"
+            placeholder="4-digit passcode"
+            inputMode="numeric"
+            maxLength="4"
+            value={passcode}
+            onChange={(e) => setPasscode(e.target.value.replace(/\D/g, ''))}
+          />
+          {error && <p className="error">{error}</p>}
+          <button type="submit">Enter Chat</button>
         </form>
-      </main>
-
+      </div>
       <style jsx>{`
-        .page{display:flex;align-items:center;justify-content:center;height:100vh;background:#f0f4f8}
-        .card{width:360px;background:white;padding:24px;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,0.08)}
-        h1{margin:0 0 12px}
-        .hostStatus{margin-bottom:12px}
-        .hostStatus .active{color:green}
-        .hostStatus .inactive{color:#c33}
-        .hostStatus button{background:transparent;border:1px solid #ddd;padding:6px 8px;border-radius:6px;cursor:pointer}
-        .form{display:flex;flex-direction:column;gap:8px}
-        input{padding:10px;border-radius:6px;border:1px solid #ddd}
-        button[type="submit"]{margin-top:8px;padding:10px;border-radius:6px;background:#111;color:white;border:none}
-        .error{color:#b00020}
+        .container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .card {
+          background: white;
+          border-radius: 12px;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+          width: 100%;
+          max-width: 400px;
+          padding: 40px;
+        }
+        h1 {
+          margin: 0 0 20px;
+          text-align: center;
+          color: #333;
+        }
+        .status {
+          text-align: center;
+          padding: 12px;
+          border-radius: 8px;
+          margin-bottom: 20px;
+          font-weight: 500;
+        }
+        .status.active {
+          background: #d4edda;
+          color: #155724;
+        }
+        .status.inactive {
+          background: #f8d7da;
+          color: #721c24;
+        }
+        form {
+          display: flex;
+          flex-direction: column;
+          gap: 12px;
+        }
+        input {
+          padding: 12px;
+          border: 1px solid #ddd;
+          border-radius: 6px;
+          font-size: 16px;
+        }
+        input:focus {
+          outline: none;
+          border-color: #667eea;
+          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        button {
+          padding: 12px;
+          background: #667eea;
+          color: white;
+          border: none;
+          border-radius: 6px;
+          font-weight: 600;
+          cursor: pointer;
+          transition: background 0.3s;
+        }
+        button:hover {
+          background: #5568d3;
+        }
+        .error {
+          color: #dc3545;
+          font-size: 14px;
+          margin: -8px 0 0;
+        }
       `}</style>
     </div>
   )
