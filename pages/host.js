@@ -12,18 +12,37 @@ export default function Host(){
   useEffect(()=>{
     // simple client-side guard
     if (user !== 'dex') router.replace('/')
-    // set presence=true for host and arrange to clear on unload
     const presenceRef = ref(db, 'presence/dex')
-    set(presenceRef, true).catch(()=>{})
+
+    // If using Firebase Realtime Database, use .info/connected + onDisconnect
     try {
-      const od = onDisconnect(presenceRef)
-      if (od && typeof od.set === 'function') od.set(false)
-    } catch (e) {}
-    const onUnload = () => { set(presenceRef, false).catch(()=>{}) }
-    window.addEventListener('beforeunload', onUnload)
-    return () => {
-      set(presenceRef, false).catch(()=>{})
-      window.removeEventListener('beforeunload', onUnload)
+      const infoRef = ref(db, '.info/connected')
+      const unsubInfo = onValue(infoRef, (snap) => {
+        const connected = !!snap.val()
+        if (connected) {
+          try {
+            const od = onDisconnect(presenceRef)
+            if (od && typeof od.set === 'function') od.set(false)
+          } catch (e) {}
+          set(presenceRef, true).catch(()=>{})
+        }
+      })
+      const onUnload = () => { set(presenceRef, false).catch(()=>{}) }
+      window.addEventListener('beforeunload', onUnload)
+      return () => {
+        set(presenceRef, false).catch(()=>{})
+        window.removeEventListener('beforeunload', onUnload)
+        if (typeof unsubInfo === 'function') unsubInfo()
+      }
+    } catch (e) {
+      // Fallback: set presence while tab is open and clear on unload (works for local fallback too)
+      set(presenceRef, true).catch(()=>{})
+      const onUnload = () => { set(presenceRef, false).catch(()=>{}) }
+      window.addEventListener('beforeunload', onUnload)
+      return () => {
+        set(presenceRef, false).catch(()=>{})
+        window.removeEventListener('beforeunload', onUnload)
+      }
     }
   },[user])
 
